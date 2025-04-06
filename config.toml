@@ -1,83 +1,76 @@
 [server]
 hostname = "${MAIL_DOMAIN}"
 
+[server.tls]
+enable = true
+timeout = "1m"
+
+[server.listener."smtp"]
+bind = ["0.0.0.0:25"]
+protocol = "smtp"
+
+[server.listener."submission"]
+auth = true
+bind = ["0.0.0.0:587"]
+protocol = "smtp"
+tls.enable = true
+
+[server.listener."submissions"]
+auth = true
+bind = ["0.0.0.0:465"]
+protocol = "smtp"
+tls.implicit = true
+
+[server.listener."imap"]
+bind = ["0.0.0.0:143"]
+protocol = "imap"
+tls.enable = true
+
+[server.listener."imaps"]
+bind = ["0.0.0.0:993"]
+protocol = "imap"
+tls.implicit = true
+
+[server.listener."http"]
+bind = ["0.0.0.0:8080"]
+protocol = "http"
+
+[certificate."default"]
+cert = "/opt/stalwart-mail/certs/fullchain.pem"
+default = true
+private-key = "/opt/stalwart-mail/certs/privkey.pem"
+
 [storage]
-data = "/opt/stalwart-mail/data"
+blob = "rocksdb"
+data = "rocksdb"
+directory = "internal"
+fts = "rocksdb"
+jmap = "rocksdb"
+lookup = "rocksdb"
+oauth2 = "rocksdb"
+queue = "fs"
+session = "rocksdb"
 
-[storage.blob]
-path = "/opt/stalwart-mail/data/blob"
-type = "fs"
+[store."rocksdb"]
+compression = "lz4"
+path = "/opt/stalwart-mail/data"
+type = "rocksdb"
 
-[storage.lookup]
-path = "/opt/stalwart-mail/data/lookup"
-type = "fs"
-
-[storage.directory]
-path = "/opt/stalwart-mail/data/directory"
-type = "fs"
-
-[storage.session]
-path = "/opt/stalwart-mail/data/session"
-type = "fs"
-
-[storage.oauth2]
-path = "/opt/stalwart-mail/data/oauth2"
-type = "fs"
-
-[storage.fts]
-path = "/opt/stalwart-mail/data/fts"
-type = "fs"
-
-[storage.jmap]
-path = "/opt/stalwart-mail/data/jmap"
-type = "fs"
-
-[storage.queue]
+[store."fs"]
 path = "/opt/stalwart-mail/queue"
 type = "fs"
 
-[certificate]
-cert = "/opt/stalwart-mail/certs/fullchain.pem"
-private-key = "/opt/stalwart-mail/certs/privkey.pem"
-
-[directory]
+[directory."internal"]
+admin-email = "${ADMIN_EMAIL}"
+store = "rocksdb"
 type = "internal"
 
-[directory.internal]
-admin-email = "${ADMIN_EMAIL}"
+[tracer."stdout"]
+ansi = false
+enable = true
+level = "info"
+type = "stdout"
 
-[smtp]
-enabled = true
-
-[smtp.server]
-bind = ["0.0.0.0:25", "0.0.0.0:587"]
-enabled = true
-
-[smtp.submission]
-auth = true
-bind = ["0.0.0.0:465"]
-enabled = true
-tls.implicit = true
-
-[imap]
-enabled = true
-
-[imap.server]
-bind = ["0.0.0.0:143"]
-enabled = true
-
-[imap.server.tls]
-bind = ["0.0.0.0:993"]
-enabled = true
-implicit = true
-
-[jmap]
-enabled = true
-
-[jmap.server]
-bind = ["0.0.0.0:8080"]
-enabled = true
-
-[webadmin]
-bind = ["0.0.0.0:8080"]
-enabled = true
+[authentication.fallback-admin]
+secret = "${ADMIN_PASSWORD}"
+user = "admin"

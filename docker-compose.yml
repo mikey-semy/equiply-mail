@@ -9,6 +9,7 @@ services:
       - MAIL_DOMAIN=${MAIL_DOMAIN}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
     ports:
       - "25:25" # SMTP
       - "587:587" # SMTP с TLS

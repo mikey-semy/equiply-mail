@@ -10,15 +10,17 @@ else
     echo "CLOUDFLARE_API_TOKEN environment variable not set. Cannot create credentials file."
 fi
 
+# Генерируем случайный пароль администратора, если он не указан
+if [ -z "$ADMIN_PASSWORD" ]; then
+    export ADMIN_PASSWORD=$(openssl rand -base64 12)
+    echo "🔑 Your administrator account is 'admin' with password '$ADMIN_PASSWORD'."
+fi
+
 # Создаем необходимые директории
-mkdir -p /opt/stalwart-mail/data/blob
-mkdir -p /opt/stalwart-mail/data/lookup
-mkdir -p /opt/stalwart-mail/data/directory
-mkdir -p /opt/stalwart-mail/data/session
-mkdir -p /opt/stalwart-mail/data/oauth2
-mkdir -p /opt/stalwart-mail/data/fts
-mkdir -p /opt/stalwart-mail/data/jmap
+mkdir -p /opt/stalwart-mail/data
 mkdir -p /opt/stalwart-mail/queue
+mkdir -p /opt/stalwart-mail/etc
+mkdir -p /opt/stalwart-mail/certs
 
 # Проверяем наличие конфигурационного файла
 if [ ! -f /opt/stalwart-mail/etc/config.toml ]; then
@@ -28,6 +30,7 @@ if [ ! -f /opt/stalwart-mail/etc/config.toml ]; then
     # Заменяем переменные в конфигурационном файле
     sed -i "s/\${MAIL_DOMAIN}/${MAIL_DOMAIN}/g" /opt/stalwart-mail/etc/config.toml
     sed -i "s/\${ADMIN_EMAIL}/${ADMIN_EMAIL}/g" /opt/stalwart-mail/etc/config.toml
+    sed -i "s/\${ADMIN_PASSWORD}/${ADMIN_PASSWORD}/g" /opt/stalwart-mail/etc/config.toml
 fi
 
 # Запускаем cron в фоне
