@@ -9,7 +9,12 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Создаем директории
-RUN mkdir -p /opt/stalwart-mail/certs /opt/stalwart-mail/scripts /etc/letsencrypt
+RUN mkdir -p /opt/stalwart-mail/certs \
+    /opt/stalwart-mail/scripts \
+    /opt/stalwart-mail/data \
+    /opt/stalwart-mail/queue \
+    /opt/stalwart-mail/logs \
+    /etc/letsencrypt
 
 # Копируем конфигурационный файл как шаблон
 COPY config.toml /opt/stalwart-mail/etc/config.toml.default
