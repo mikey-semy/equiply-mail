@@ -26,11 +26,11 @@ RUN find / -name "stalwart-mail" -type f -executable 2>/dev/null || echo "stalwa
 COPY config.toml /opt/stalwart-mail/etc/config.toml.default
 
 # Копируем скрипты
-COPY scripts/entrypoint.sh /opt/stalwart-mail/scripts/entrypoint.sh
+COPY scripts/docker-entrypoint.sh /opt/stalwart-mail/scripts/docker-entrypoint.sh
 COPY scripts/renew-cert.sh /opt/stalwart-mail/scripts/renew-cert.sh
 
 # Устанавливаем права на выполнение
-RUN chmod +x /opt/stalwart-mail/scripts/entrypoint.sh \
+RUN chmod +x /opt/stalwart-mail/scripts/docker-entrypoint.sh \
     && chmod +x /opt/stalwart-mail/scripts/renew-cert.sh
 
 # Настраиваем cron для обновления сертификатов
@@ -39,4 +39,4 @@ RUN echo "0 3 * * * /opt/stalwart-mail/scripts/renew-cert.sh >> /var/log/cert-re
     && crontab /etc/cron.d/cert-renewal
 
 # Точка входа
-ENTRYPOINT ["/opt/stalwart-mail/scripts/entrypoint.sh"]
+ENTRYPOINT ["/opt/stalwart-mail/scripts/docker-entrypoint.sh"]
