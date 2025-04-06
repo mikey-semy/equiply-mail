@@ -25,5 +25,5 @@ service cron start
 # Получаем сертификат при первом запуске
 /opt/stalwart-mail/scripts/renew-cert.sh
 
-# Запускаем оригинальный entrypoint
-exec /bin/sh /usr/local/bin/docker-entrypoint.sh "$@"
+# Запускаем сервер напрямую вместо использования docker-entrypoint.sh
+exec /opt/stalwart-mail/bin/stalwart-mail -c /opt/stalwart-mail/etc/config.toml

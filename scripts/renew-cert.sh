@@ -1,38 +1,53 @@
 #!/bin/bash
 set -e
 
-DOMAIN="${MAIL_DOMAIN:-mail.domain.com}"
-
-# Проверяем наличие файла с учетными данными Cloudflare
-if [ ! -f /opt/stalwart-mail/scripts/cloudflare.ini ]; then
-    echo "Cloudflare credentials file not found. Cannot obtain certificate automatically."
-    # Генерируем самоподписанный сертификат
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout /opt/stalwart-mail/certs/privkey.pem \
-        -out /opt/stalwart-mail/certs/fullchain.pem \
-        -subj "/CN=$DOMAIN"
-    chmod 600 /opt/stalwart-mail/certs/*.pem
-    exit 0
+# Проверяем наличие переменных окружения
+if [ -z "$MAIL_DOMAIN" ]; then
+    echo "MAIL_DOMAIN environment variable not set. Cannot obtain certificate."
+    exit 1
 fi
 
-# Проверяем, есть ли уже сертификат и не истек ли он
-if [ ! -f /opt/stalwart-mail/certs/fullchain.pem ] || [ ! -f /opt/stalwart-mail/certs/privkey.pem ] || ! openssl x509 -checkend 2592000 -noout -in /opt/stalwart-mail/certs/fullchain.pem > /dev/null 2>&1; then
-    echo "Obtaining or renewing certificate for $DOMAIN"
+if [ -z "$ADMIN_EMAIL" ]; then
+    echo "ADMIN_EMAIL environment variable not set. Cannot obtain certificate."
+    exit 1
+fi
 
-    # Пытаемся получить сертификат через DNS-challenge с API токеном
-    if certbot certonly --dns-cloudflare --dns-cloudflare-credentials /opt/stalwart-mail/scripts/cloudflare.ini \
-        -d "$DOMAIN" --non-interactive --agree-tos --email "${ADMIN_EMAIL:-admin@example.com}" \
-        --cert-name "$DOMAIN" --deploy-hook "cp -L /etc/letsencrypt/live/$DOMAIN/fullchain.pem /opt/stalwart-mail/certs/ && cp -L /etc/letsencrypt/live/$DOMAIN/privkey.pem /opt/stalwart-mail/certs/ && chmod 600 /opt/stalwart-mail/certs/*.pem"; then
-        echo "Certificate successfully obtained/renewed"
-    else
-        # Если не удалось получить сертификат, генерируем самоподписанный
-        echo "Failed to obtain certificate from Let's Encrypt, generating self-signed certificate"
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-            -keyout /opt/stalwart-mail/certs/privkey.pem \
-            -out /opt/stalwart-mail/certs/fullchain.pem \
-            -subj "/CN=$DOMAIN"
-        chmod 600 /opt/stalwart-mail/certs/*.pem
+# Проверяем наличие сертификата
+if [ -f "/etc/letsencrypt/live/$MAIL_DOMAIN/fullchain.pem" ] && [ -f "/etc/letsencrypt/live/$MAIL_DOMAIN/privkey.pem" ]; then
+    # Проверяем срок действия сертификата
+    CERT_EXPIRY=$(openssl x509 -enddate -noout -in "/etc/letsencrypt/live/$MAIL_DOMAIN/fullchain.pem" | cut -d= -f2)
+    CERT_EXPIRY_EPOCH=$(date -d "$CERT_EXPIRY" +%s)
+    CURRENT_EPOCH=$(date +%s)
+    DAYS_REMAINING=$(( ($CERT_EXPIRY_EPOCH - $CURRENT_EPOCH) / 86400 ))
+
+    if [ $DAYS_REMAINING -gt 30 ]; then
+        echo "Certificate is still valid, no renewal needed"
+        # Копируем сертификаты в директорию Stalwart Mail
+        cp "/etc/letsencrypt/live/$MAIL_DOMAIN/fullchain.pem" /opt/stalwart-mail/certs/fullchain.pem
+        cp "/etc/letsencrypt/live/$MAIL_DOMAIN/privkey.pem" /opt/stalwart-mail/certs/privkey.pem
+        chmod 644 /opt/stalwart-mail/certs/fullchain.pem
+        chmod 600 /opt/stalwart-mail/certs/privkey.pem
+        exit 0
     fi
-else
-    echo "Certificate is still valid, no renewal needed"
+fi
+
+echo "Obtaining or renewing certificate for $MAIL_DOMAIN"
+
+# Пытаемся получить сертификат с увеличенным временем ожидания DNS
+certbot certonly --dns-cloudflare --dns-cloudflare-credentials /opt/stalwart-mail/scripts/cloudflare.ini \
+    --dns-cloudflare-propagation-seconds 60 \
+    -d "$MAIL_DOMAIN" \
+    --email "$ADMIN_EMAIL" \
+    --agree-tos \
+    --non-interactive \
+    --deploy-hook "cp /etc/letsencrypt/live/$MAIL_DOMAIN/fullchain.pem /opt/stalwart-mail/certs/fullchain.pem && cp /etc/letsencrypt/live/$MAIL_DOMAIN/privkey.pem /opt/stalwart-mail/certs/privkey.pem && chmod 644 /opt/stalwart-mail/certs/fullchain.pem && chmod 600 /opt/stalwart-mail/certs/privkey.pem"
+
+# Проверяем, успешно ли получен сертификат
+if [ ! -f "/etc/letsencrypt/live/$MAIL_DOMAIN/fullchain.pem" ] || [ ! -f "/etc/letsencrypt/live/$MAIL_DOMAIN/privkey.pem" ]; then
+    echo "Failed to obtain certificate from Let's Encrypt, generating self-signed certificate"
+
+    # Генерируем самоподписанный сертификат
+    openssl req -x509 -newkey rsa:4096 -nodes -keyout /opt/stalwart-mail/certs/privkey.pem -out /opt/stalwart-mail/certs/fullchain.pem -days 365 -subj "/CN=$MAIL_DOMAIN" -addext "subjectAltName=DNS:$MAIL_DOMAIN"
+    chmod 644 /opt/stalwart-mail/certs/fullchain.pem
+    chmod 600 /opt/stalwart-mail/certs/privkey.pem
 fi
