@@ -10,6 +10,11 @@ services:
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     ports:
       - "25:25" # SMTP
       - "587:587" # SMTP с TLS

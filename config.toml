@@ -35,20 +35,27 @@ default = true
 private-key = "/opt/stalwart-mail/certs/privkey.pem"
 
 [storage]
-blob = "rocksdb"
-data = "rocksdb"
+blob = "postgresql"
+data = "postgresql"
 directory = "internal"
-fts = "rocksdb"
-lookup = "rocksdb"
+fts = "postgresql"
+lookup = "postgresql"
 
-[store."rocksdb"]
-compression = "lz4"
-path = "/opt/stalwart-mail/data"
-type = "rocksdb"
+[store."postgresql"]
+port = ${DB_PORT}
+database = "${DB_NAME}"
+host = "${DB_HOST}"
+password = "${DB_PASSWORD}"
+timeout = "15s"
+type = "postgresql"
+user = "${DB_USER}"
+
+[store."postgresql".pool]
+max-connections = 10
 
 [directory."internal"]
 admin-email = "${ADMIN_EMAIL}"
-store = "rocksdb"
+store = "postgresql"
 type = "internal"
 
 [authentication.fallback-admin]
