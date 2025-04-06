@@ -33,4 +33,4 @@ RUN echo "0 3 * * * /opt/stalwart-mail/scripts/renew-cert.sh >> /var/log/cert-re
     && crontab /etc/cron.d/cert-renewal
 
 # Точка входа
-ENTRYPOINT ["/opt/stalwart-mail/scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/opt/stalwart-mail/scripts/docker-entrypoint.sh"]

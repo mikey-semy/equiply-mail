@@ -24,7 +24,6 @@ services:
       - mail-logs:/opt/stalwart-mail/logs
       - letsencrypt:/etc/letsencrypt
     restart: unless-stopped
-    entrypoint: ["/opt/stalwart-mail/scripts/docker-entrypoint.sh"]
     networks:
       - dokploy-network
 
