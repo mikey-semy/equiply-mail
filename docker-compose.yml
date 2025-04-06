@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  mail:
+    build: .
+    container_name: stalwart-mail
+    env_file:
+      - .env
+    environment:
+      - MAIL_DOMAIN=${MAIL_DOMAIN}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+    ports:
+      - "25:25" # SMTP
+      - "587:587" # SMTP с TLS
+      - "465:465" # SMTP SSL
+      - "143:143" # IMAP
+      - "993:993" # IMAP SSL
+      - "8080:8080" # Веб-интерфейс
+    volumes:
+      - mail_config:/opt/stalwart-mail/etc
+      - mail_data:/opt/stalwart-mail/data
+      - mail_certs:/opt/stalwart-mail/certs
+      - mail_queue:/opt/stalwart-mail/queue
+      - mail_logs:/opt/stalwart-mail/logs
+      - letsencrypt:/etc/letsencrypt
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+volumes:
+  mail_config:
+  mail_data:
+  mail_certs:
+  mail_queue:
+  mail_logs:
+  letsencrypt:
+
+networks:
+  dokploy-network:
+    external: true
