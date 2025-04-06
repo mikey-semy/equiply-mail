@@ -1,20 +1,11 @@
 version: "3.8"
 services:
   mail:
-    build: .
+    image: stalwartlabs/mail-server:latest
     container_name: stalwart-mail
-    env_file:
-      - .env
     environment:
-      - MAIL_DOMAIN=${MAIL_DOMAIN}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - SMTP_SERVER_HOSTNAME=mail.equiply.ru
+      - ADMIN_PASSWORD=your_admin_password
     ports:
       - "25:25" # SMTP
       - "587:587" # SMTP с TLS
@@ -23,12 +14,7 @@ services:
       - "993:993" # IMAP SSL
       - "8080:8080" # Веб-интерфейс
     volumes:
-      - mail-config:/opt/stalwart-mail/etc
-      - mail-data:/opt/stalwart-mail/data
-      - mail-certs:/opt/stalwart-mail/certs
-      - mail-queue:/opt/stalwart-mail/queue
-      - mail-logs:/opt/stalwart-mail/logs
-      - letsencrypt:/etc/letsencrypt
+      - mail-data:/opt/stalwart-mail
     restart: unless-stopped
     networks:
       - dokploy-network
@@ -38,9 +24,4 @@ networks:
     external: true
 
 volumes:
-  mail-config:
   mail-data:
-  mail-certs:
-  mail-queue:
-  mail-logs:
-  letsencrypt:
