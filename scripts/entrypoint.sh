@@ -25,5 +25,34 @@ service cron start
 # Получаем сертификат при первом запуске
 /opt/stalwart-mail/scripts/renew-cert.sh
 
-# Запускаем сервер напрямую вместо использования docker-entrypoint.sh
-exec /opt/stalwart-mail/bin/stalwart-mail -c /opt/stalwart-mail/etc/config.toml
+# Находим путь к исполняемому файлу Stalwart Mail
+echo "Searching for stalwart-mail executable..."
+STALWART_BIN=$(find / -name "stalwart-mail" -type f -executable 2>/dev/null | head -n 1)
+
+if [ -z "$STALWART_BIN" ]; then
+    echo "Could not find stalwart-mail executable. Listing all executables in /usr/bin and /usr/local/bin:"
+    ls -la /usr/bin | grep -i stalwart || true
+    ls -la /usr/local/bin | grep -i stalwart || true
+    ls -la /bin | grep -i stalwart || true
+
+    echo "Trying to find any stalwart-related files:"
+    find / -name "*stalwart*" 2>/dev/null || true
+
+    echo "Error: stalwart-mail executable not found. Trying to run the default command..."
+    # Пробуем запустить команду по умолчанию из образа
+    if [ -f /usr/local/bin/docker-entrypoint.sh ]; then
+        exec /usr/local/bin/docker-entrypoint.sh
+    else
+        echo "Default entrypoint not found. Trying to run stalwart-smtp directly..."
+        if command -v stalwart-smtp &> /dev/null; then
+            exec stalwart-smtp -c /opt/stalwart-mail/etc/config.toml
+        else
+            echo "Fatal error: Could not find any stalwart executable."
+            exit 1
+        fi
+    fi
+else
+    echo "Found Stalwart Mail executable at: $STALWART_BIN"
+    # Запускаем сервер
+    exec $STALWART_BIN -c /opt/stalwart-mail/etc/config.toml
+fi

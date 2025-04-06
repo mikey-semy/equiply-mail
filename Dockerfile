@@ -16,6 +16,12 @@ RUN mkdir -p /opt/stalwart-mail/certs \
     /opt/stalwart-mail/logs \
     /etc/letsencrypt
 
+# Поиск исполняемого файла stalwart-mail
+RUN find / -name "stalwart-mail" -type f -executable 2>/dev/null || echo "stalwart-mail not found" && \
+    find / -name "*stalwart*" -type f -executable 2>/dev/null || echo "No stalwart executables found" && \
+    ls -la /usr/bin | grep -i stalwart || echo "No stalwart in /usr/bin" && \
+    ls -la /usr/local/bin | grep -i stalwart || echo "No stalwart in /usr/local/bin"
+
 # Копируем конфигурационный файл как шаблон
 COPY config.toml /opt/stalwart-mail/etc/config.toml.default
 
