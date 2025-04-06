@@ -18,7 +18,6 @@ fi
 
 # Создаем необходимые директории
 mkdir -p /opt/stalwart-mail/data
-mkdir -p /opt/stalwart-mail/queue
 mkdir -p /opt/stalwart-mail/etc
 mkdir -p /opt/stalwart-mail/certs
 
@@ -38,6 +37,17 @@ service cron start
 
 # Получаем сертификат при первом запуске
 /opt/stalwart-mail/scripts/renew-cert.sh
+
+# Создаем самоподписанный сертификат, если не удалось получить через Let's Encrypt
+if [ ! -f /opt/stalwart-mail/certs/fullchain.pem ] || [ ! -f /opt/stalwart-mail/certs/privkey.pem ]; then
+    echo "Creating self-signed certificate..."
+    openssl req -x509 -newkey rsa:4096 -keyout /opt/stalwart-mail/certs/privkey.pem -out /opt/stalwart-mail/certs/fullchain.pem -days 365 -nodes -subj "/CN=${MAIL_DOMAIN}"
+    chmod 600 /opt/stalwart-mail/certs/privkey.pem
+fi
+
+# Выводим содержимое конфигурационного файла для отладки
+echo "Current configuration:"
+cat /opt/stalwart-mail/etc/config.toml
 
 # Находим путь к исполняемому файлу Stalwart Mail
 echo "Searching for stalwart executables..."

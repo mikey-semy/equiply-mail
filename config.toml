@@ -1,10 +1,6 @@
 [server]
 hostname = "${MAIL_DOMAIN}"
 
-[server.tls]
-enable = true
-timeout = "1m"
-
 [server.listener."smtp"]
 bind = ["0.0.0.0:25"]
 protocol = "smtp"
@@ -13,7 +9,6 @@ protocol = "smtp"
 auth = true
 bind = ["0.0.0.0:587"]
 protocol = "smtp"
-tls.enable = true
 
 [server.listener."submissions"]
 auth = true
@@ -24,7 +19,6 @@ tls.implicit = true
 [server.listener."imap"]
 bind = ["0.0.0.0:143"]
 protocol = "imap"
-tls.enable = true
 
 [server.listener."imaps"]
 bind = ["0.0.0.0:993"]
@@ -45,31 +39,17 @@ blob = "rocksdb"
 data = "rocksdb"
 directory = "internal"
 fts = "rocksdb"
-jmap = "rocksdb"
 lookup = "rocksdb"
-oauth2 = "rocksdb"
-queue = "fs"
-session = "rocksdb"
 
 [store."rocksdb"]
 compression = "lz4"
 path = "/opt/stalwart-mail/data"
 type = "rocksdb"
 
-[store."fs"]
-path = "/opt/stalwart-mail/queue"
-type = "fs"
-
 [directory."internal"]
 admin-email = "${ADMIN_EMAIL}"
 store = "rocksdb"
 type = "internal"
-
-[tracer."stdout"]
-ansi = false
-enable = true
-level = "info"
-type = "stdout"
 
 [authentication.fallback-admin]
 secret = "${ADMIN_PASSWORD}"

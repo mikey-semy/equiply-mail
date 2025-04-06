@@ -12,8 +12,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /opt/stalwart-mail/certs \
     /opt/stalwart-mail/scripts \
     /opt/stalwart-mail/data \
-    /opt/stalwart-mail/queue \
-    /opt/stalwart-mail/logs \
+    /opt/stalwart-mail/etc \
     /etc/letsencrypt
 
 # Копируем конфигурационный файл как шаблон
@@ -33,4 +32,4 @@ RUN echo "0 3 * * * /opt/stalwart-mail/scripts/renew-cert.sh >> /var/log/cert-re
     && crontab /etc/cron.d/cert-renewal
 
 # Точка входа
-CMD ["/bin/bash", "/opt/stalwart-mail/scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["/opt/stalwart-mail/scripts/docker-entrypoint.sh"]
