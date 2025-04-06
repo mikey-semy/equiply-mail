@@ -18,4 +18,3 @@
 - SPF запись: `v=spf1 mx ~all`
 - DKIM: будет настроен автоматически
 - DMARC: `v=DMARC1; p=none; rua=mailto:admin@equiply.ru`
-```
